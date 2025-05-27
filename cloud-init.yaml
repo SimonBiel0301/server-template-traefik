@@ -16,7 +16,9 @@ users:
 runcmd:
   - traefikurl="traefik.daemonai.simonbiel.com"
   - portainerurl="portainer.daemonai.simonbiel.com"
+  - uptimekumaurl="uptime.daemonai.simonbiel.com"
   - letsencryptemail="me@simonbiel.com"
+
   - curl -fsSL https://get.docker.com -o get-docker.sh
   - sh get-docker.sh
   - usermod -aG docker daemonai
@@ -35,5 +37,6 @@ runcmd:
   - sed -i "s/\[traefik-url\]/$traefikurl/gi" ./docker-compose.yml
   - sed -i "s/\[portainer-url\]/$portainerurl/gi" ./docker-compose.yml
   - sed -i "s/\[letsencrypt-email\]/$letsencryptemail/gi" ./traefik-data/traefik.yml
+  - sed -i "s/\[uptimekuma-url\]/$uptimekumaurl/gi" ./traefik-data/traefik.yml
   - docker network create proxy
   - docker compose up -d
