@@ -1,0 +1,39 @@
+#cloud-config
+
+# Create user and set password
+users:
+  - name: daemonai
+    lock_passwd: false
+    # Password hash for 'mypassword' - generate your own with: mkpasswd --method=SHA-512 or openssl passwd -6 (macos)
+    passwd: [hash]
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: [adm, sudo]
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - [Public Key]
+
+# Install Docker
+runcmd:
+  - traefikurl="traefik.daemonai.simonbiel.com"
+  - portainerurl="portainer.daemonai.simonbiel.com"
+  - letsencryptemail="me@simonbiel.com"
+  - curl -fsSL https://get.docker.com -o get-docker.sh
+  - sh get-docker.sh
+  - usermod -aG docker daemonai
+  - systemctl enable docker
+  - systemctl start docker
+  - sudo apt update
+  - sudo apt install -y git apache2-utils ifmetric net-tools
+
+  - cd ~
+  - git clone https://github.com/SimonBiel0301/server-template-traefik.git
+  - cp -ra traefik-portainer-core/core/ core/
+  # - rm -rf traefik-portainer-core
+  - cd core
+  - chmod 600 traefik-data/acme.json
+  - htpasswd -b -c ./traefik-data/auth/usersfile daemonai [password]
+  - sed -i "s/\[traefik-url\]/$traefikurl/gi" ./docker-compose.yml
+  - sed -i "s/\[portainer-url\]/$portainerurl/gi" ./docker-compose.yml
+  - sed -i "s/\[letsencrypt-email\]/$letsencryptemail/gi" ./traefik-data/traefik.yml
+  - docker network create proxy
+  - docker compose up -d
